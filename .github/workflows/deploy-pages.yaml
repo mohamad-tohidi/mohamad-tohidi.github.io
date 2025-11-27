@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build Next.js (produces out/ when output: "export" is set)
+      - name: Build Next.js 
         run: pnpm run build
 
       - name: Show out/ folder (debug)
