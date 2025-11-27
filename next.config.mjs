@@ -1,14 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // enable static HTML export
-  output: "export",
-
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
+  output: 'export',
+  basePath: process.env.PAGES_BASE_PATH,
 };
 
-export default nextConfig;
+module.exports = nextConfig;
