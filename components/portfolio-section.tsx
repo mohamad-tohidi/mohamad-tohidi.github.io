@@ -24,7 +24,7 @@ export function PortfolioSection({ index }: PortfolioSectionProps) {
         </motion.span>
 
         <motion.a
-          href="https://parsaqa.com"
+          href="https://porsyab.ir"
           target="_blank"
           rel="noopener noreferrer"
           initial={{ opacity: 0, y: 40 }}
@@ -44,7 +44,7 @@ export function PortfolioSection({ index }: PortfolioSectionProps) {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="flex items-center gap-2 text-muted-foreground transition-colors duration-300 group-hover:text-foreground"
           >
-            <span className="text-lg">parsaqa.com</span>
+            <span className="text-lg">porsyab.ir</span>
             <ArrowUpLeft className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-[-4px]" />
           </motion.div>
         </motion.a>
