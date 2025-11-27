@@ -1,0 +1,13 @@
+1:"$Sreact.fragment"
+2:I[17146,["/_next/static/chunks/3217e485bcb4270d.js","/_next/static/chunks/3aca9caf35bfc9e0.js"],"ScrollIndicator"]
+3:I[98924,["/_next/static/chunks/3217e485bcb4270d.js","/_next/static/chunks/3aca9caf35bfc9e0.js"],"HeroSection"]
+4:I[2721,["/_next/static/chunks/3217e485bcb4270d.js","/_next/static/chunks/3aca9caf35bfc9e0.js"],"TranslationSection"]
+5:I[45024,["/_next/static/chunks/3217e485bcb4270d.js","/_next/static/chunks/3aca9caf35bfc9e0.js"],"HighlightSection"]
+6:I[38445,["/_next/static/chunks/3217e485bcb4270d.js","/_next/static/chunks/3aca9caf35bfc9e0.js"],"StorySection"]
+7:I[68068,["/_next/static/chunks/3217e485bcb4270d.js","/_next/static/chunks/3aca9caf35bfc9e0.js"],"ChatDemo"]
+8:I[76954,["/_next/static/chunks/3217e485bcb4270d.js","/_next/static/chunks/3aca9caf35bfc9e0.js"],"PortfolioSection"]
+9:I[9785,["/_next/static/chunks/3217e485bcb4270d.js","/_next/static/chunks/3aca9caf35bfc9e0.js"],"ContactSection"]
+a:I[89225,["/_next/static/chunks/f1e68980346fa22d.js"],"OutletBoundary"]
+b:"$Sreact.suspense"
+0:{"buildId":"VNB21wALE8NgDNig0T837","rsc":["$","$1","c",{"children":[["$","main",null,{"className":"relative h-screen snap-y snap-mandatory overflow-y-auto","children":[["$","$L2",null,{"totalSections":9}],["$","$L3",null,{}],["$","$L4",null,{"index":1}],["$","$L5",null,{"index":2}],[["$","$L6","2",{"label":"هوشمند","title":"پاسخ، به سلیقه شما،","subtitle":"با رفرنس‌دهی به منابع شما.","index":3}],["$","$L6","3",{"label":"سریع","title":"پاسخ‌های فوری.","subtitle":"بدون انتظار.","index":4}],["$","$L6","4",{"label":"یکپارچه","title":"بخشی از برند شما.","subtitle":"کاملاً بومی.","index":5}]],["$","$L7",null,{}],["$","$L8",null,{"index":7}],["$","$L9",null,{"index":8}]]}],[["$","script","script-0",{"src":"/_next/static/chunks/3aca9caf35bfc9e0.js","async":true}]],["$","$La",null,{"children":["$","$b",null,{"name":"Next.MetadataOutlet","children":"$@c"}]}]]}],"loading":null,"isPartial":false}
+c:null
