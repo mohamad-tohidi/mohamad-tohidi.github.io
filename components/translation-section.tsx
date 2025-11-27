@@ -118,7 +118,7 @@ export function TranslationSection({ index }: TranslationSectionProps) {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="mb-8 inline-block text-sm font-medium tracking-[0.2em] text-muted-foreground"
         >
-          برای تمام فرهنگ‌ها و ملل
+          پشتیبانی از چندین زبان
         </motion.span>
 
         {/* Title line - first two words */}
