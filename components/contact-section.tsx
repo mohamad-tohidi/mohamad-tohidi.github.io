@@ -30,7 +30,7 @@ export function ContactSection({ index }: ContactSectionProps) {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="mb-16 text-balance text-4xl font-light leading-tight tracking-tight md:text-6xl lg:text-7xl"
         >
-          بیایید صحبت کنیم
+          به صرف قهوه
         </motion.h2>
 
         <div className="flex flex-col items-center gap-8">
@@ -53,7 +53,7 @@ export function ContactSection({ index }: ContactSectionProps) {
 
           {/* Phone */}
           <motion.a
-            href="tel:+989123456789"
+            href="tel:+989919357173"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -64,13 +64,13 @@ export function ContactSection({ index }: ContactSectionProps) {
               <Phone className="h-5 w-5" />
             </div>
             <span dir="ltr" className="text-lg">
-              +98 912 345 6789
+              +98 991 935 7173
             </span>
           </motion.a>
 
           {/* Email */}
           <motion.a
-            href="mailto:your@email.com"
+            href="mailto:the.mohammad.tohidi@gmail.com"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -80,7 +80,7 @@ export function ContactSection({ index }: ContactSectionProps) {
             <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border transition-colors duration-300 group-hover:border-foreground/50 group-hover:bg-foreground/5">
               <Mail className="h-5 w-5" />
             </div>
-            <span className="text-lg">your@email.com</span>
+            <span className="text-lg">the.mohammad.tohidi@gmail.com</span>
           </motion.a>
         </div>
 
