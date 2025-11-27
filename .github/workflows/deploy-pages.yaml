@@ -11,7 +11,6 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,22 +25,23 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      - name: Verify pnpm installation
+      - name: Verify pnpm
         run: pnpm --version
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build Next.js
+      - name: Build Next.js (produces out/ when output: "export" is set)
         run: pnpm run build
 
-      - name: Export static site
-        run: pnpm exec next export
+      - name: Show out/ folder (debug)
+        run: |
+          echo "---- out/ listing ----"
+          ls -la out || echo "out/ not found"
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages (gh-pages)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./out
           publish_branch: gh-pages
-
