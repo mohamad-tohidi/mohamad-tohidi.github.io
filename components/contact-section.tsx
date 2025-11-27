@@ -36,7 +36,7 @@ export function ContactSection({ index }: ContactSectionProps) {
         <div className="flex flex-col items-center gap-8">
           {/* Telegram */}
           <motion.a
-            href="https://t.me/yourusername"
+            href="https://t.me/Mohammadtohidi"
             target="_blank"
             rel="noopener noreferrer"
             initial={{ opacity: 0, y: 20 }}
@@ -48,7 +48,7 @@ export function ContactSection({ index }: ContactSectionProps) {
             <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border transition-colors duration-300 group-hover:border-foreground/50 group-hover:bg-foreground/5">
               <TelegramIcon className="h-5 w-5" />
             </div>
-            <span className="text-lg">@yourusername</span>
+            <span className="text-lg">@Mohammadtohidi</span>
           </motion.a>
 
           {/* Phone */}
