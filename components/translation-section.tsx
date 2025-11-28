@@ -22,7 +22,8 @@ export function TranslationSection({ index }: TranslationSectionProps) {
   const scrollAccumulator = useRef(0)
   const lastScrollTime = useRef(0)
   const touchLastY = useRef<number | null>(null)
-  const scrollThreshold = 100
+  const scrollThreshold = 80
+  const debounceTime = 300
 
   const isComplete = translatedCount >= words.length
   const isAtStart = translatedCount <= 0
@@ -77,11 +78,11 @@ export function TranslationSection({ index }: TranslationSectionProps) {
       setIsLocked(true)
 
       // Debounce rapid scroll events
-      if (now - lastScrollTime.current < 50) {
+      if (now - lastScrollTime.current < debounceTime) {
         return
       }
 
-      const delta = Math.abs(e.deltaY)
+      const delta = Math.min(Math.abs(e.deltaY), scrollThreshold)
       scrollAccumulator.current += delta
 
       if (scrollAccumulator.current >= scrollThreshold) {
@@ -113,9 +114,6 @@ export function TranslationSection({ index }: TranslationSectionProps) {
     const delta = touchLastY.current - currentY
     touchLastY.current = currentY
 
-    const absDelta = Math.abs(delta)
-    scrollAccumulator.current += absDelta
-
     const isScrollingDown = delta > 0
     const isScrollingUp = delta < 0
 
@@ -135,9 +133,12 @@ export function TranslationSection({ index }: TranslationSectionProps) {
     setIsLocked(true)
 
     // Debounce rapid events
-    if (now - lastScrollTime.current < 50) {
+    if (now - lastScrollTime.current < debounceTime) {
       return
     }
+
+    const absDelta = Math.min(Math.abs(delta), scrollThreshold)
+    scrollAccumulator.current += absDelta
 
     if (scrollAccumulator.current >= scrollThreshold) {
       lastScrollTime.current = now

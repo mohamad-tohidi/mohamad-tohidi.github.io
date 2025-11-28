@@ -15,7 +15,9 @@ export function HighlightSection({ index }: HighlightSectionProps) {
   const [isInView, setIsInView] = useState(false)
   const scrollAccumulator = useRef(0)
   const lastScrollTime = useRef(0)
-  const scrollThreshold = 100
+  const touchLastY = useRef<number | null>(null)
+  const scrollThreshold = 80
+  const debounceTime = 300
 
   const isComplete = highlightedCount >= words.length
   const isAtStart = highlightedCount <= 0
@@ -58,11 +60,11 @@ export function HighlightSection({ index }: HighlightSectionProps) {
       e.preventDefault()
       e.stopPropagation()
 
-      if (now - lastScrollTime.current < 50) {
+      if (now - lastScrollTime.current < debounceTime) {
         return
       }
 
-      const delta = Math.abs(e.deltaY)
+      const delta = Math.min(Math.abs(e.deltaY), scrollThreshold)
       scrollAccumulator.current += delta
 
       if (scrollAccumulator.current >= scrollThreshold) {
@@ -79,12 +81,72 @@ export function HighlightSection({ index }: HighlightSectionProps) {
     [isInView, isComplete, isAtStart],
   )
 
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (!isInView || e.touches.length !== 1) return
+    touchLastY.current = e.touches[0].clientY
+    scrollAccumulator.current = 0
+  }, [isInView])
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isInView || e.touches.length !== 1 || touchLastY.current === null) return
+
+    const now = Date.now()
+    const currentY = e.touches[0].clientY
+    const delta = touchLastY.current - currentY
+    touchLastY.current = currentY
+
+    const isScrollingDown = delta > 0
+    const isScrollingUp = delta < 0
+
+    if (isComplete && isScrollingDown) {
+      return
+    }
+    if (isAtStart && isScrollingUp) {
+      return
+    }
+
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (now - lastScrollTime.current < debounceTime) {
+      return
+    }
+
+    const absDelta = Math.min(Math.abs(delta), scrollThreshold)
+    scrollAccumulator.current += absDelta
+
+    if (scrollAccumulator.current >= scrollThreshold) {
+      lastScrollTime.current = now
+      scrollAccumulator.current = 0
+
+      if (isScrollingDown) {
+        setHighlightedCount((prev) => Math.min(prev + 1, words.length))
+      } else {
+        setHighlightedCount((prev) => Math.max(prev - 1, 0))
+      }
+    }
+  }, [isInView, isComplete, isAtStart])
+
+  const handleTouchEnd = useCallback(() => {
+    touchLastY.current = null
+    scrollAccumulator.current = 0
+  }, [])
+
   useEffect(() => {
     if (!isInView) return
 
     window.addEventListener("wheel", handleWheel, { passive: false })
-    return () => window.removeEventListener("wheel", handleWheel)
-  }, [handleWheel, isInView])
+    window.addEventListener("touchstart", handleTouchStart, { passive: true })
+    window.addEventListener("touchmove", handleTouchMove, { passive: false })
+    window.addEventListener("touchend", handleTouchEnd, { passive: true })
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel)
+      window.removeEventListener("touchstart", handleTouchStart)
+      window.removeEventListener("touchmove", handleTouchMove)
+      window.removeEventListener("touchend", handleTouchEnd)
+    }
+  }, [isInView, handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd])
 
   return (
     <section
