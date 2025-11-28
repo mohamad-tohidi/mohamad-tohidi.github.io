@@ -21,6 +21,7 @@ export function TranslationSection({ index }: TranslationSectionProps) {
   const [isLocked, setIsLocked] = useState(false)
   const scrollAccumulator = useRef(0)
   const lastScrollTime = useRef(0)
+  const touchLastY = useRef<number | null>(null)
   const scrollThreshold = 100
 
   const isComplete = translatedCount >= words.length
@@ -97,12 +98,79 @@ export function TranslationSection({ index }: TranslationSectionProps) {
     [isInView, isComplete, isAtStart],
   )
 
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    if (!isInView || e.touches.length !== 1) return
+    touchLastY.current = e.touches[0].clientY
+    scrollAccumulator.current = 0
+    lastScrollTime.current = Date.now()
+  }, [isInView])
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isInView || e.touches.length !== 1 || touchLastY.current === null) return
+
+    const now = Date.now()
+    const currentY = e.touches[0].clientY
+    const delta = touchLastY.current - currentY
+    touchLastY.current = currentY
+
+    const absDelta = Math.abs(delta)
+    scrollAccumulator.current += absDelta
+
+    const isScrollingDown = delta > 0
+    const isScrollingUp = delta < 0
+
+    // Allow natural scrolling when animation is at boundaries
+    if (isComplete && isScrollingDown) {
+      setIsLocked(false)
+      return
+    }
+    if (isAtStart && isScrollingUp) {
+      setIsLocked(false)
+      return
+    }
+
+    // Prevent default scroll behavior during animation
+    e.preventDefault()
+    e.stopPropagation()
+    setIsLocked(true)
+
+    // Debounce rapid events
+    if (now - lastScrollTime.current < 50) {
+      return
+    }
+
+    if (scrollAccumulator.current >= scrollThreshold) {
+      lastScrollTime.current = now
+      scrollAccumulator.current = 0
+
+      if (isScrollingDown) {
+        setTranslatedCount((prev) => Math.min(prev + 1, words.length))
+      } else {
+        setTranslatedCount((prev) => Math.max(prev - 1, 0))
+      }
+    }
+  }, [isInView, isComplete, isAtStart])
+
+  const handleTouchEnd = useCallback(() => {
+    touchLastY.current = null
+    scrollAccumulator.current = 0
+  }, [])
+
   useEffect(() => {
     if (!isInView) return
 
     window.addEventListener("wheel", handleWheel, { passive: false })
-    return () => window.removeEventListener("wheel", handleWheel)
-  }, [handleWheel, isInView])
+    window.addEventListener("touchstart", handleTouchStart, { passive: true })
+    window.addEventListener("touchmove", handleTouchMove, { passive: false })
+    window.addEventListener("touchend", handleTouchEnd, { passive: true })
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel)
+      window.removeEventListener("touchstart", handleTouchStart)
+      window.removeEventListener("touchmove", handleTouchMove)
+      window.removeEventListener("touchend", handleTouchEnd)
+    }
+  }, [isInView, handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd])
 
   return (
     <section
@@ -168,7 +236,7 @@ export function TranslationSection({ index }: TranslationSectionProps) {
                   <motion.span
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0.2, 1, 0.2] }}
-                    transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
                     className="absolute -right-3 top-0 h-full w-1 rounded-full bg-foreground"
                   />
                 )}
@@ -226,7 +294,7 @@ export function TranslationSection({ index }: TranslationSectionProps) {
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={{ opacity: [0.2, 1, 0.2] }}
-                      transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                      transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
                       className="absolute -right-3 top-0 h-full w-1 rounded-full bg-muted-foreground"
                     />
                   )}
@@ -252,7 +320,7 @@ export function TranslationSection({ index }: TranslationSectionProps) {
                   i < translatedCount ? "bg-foreground" : "bg-muted-foreground/30"
                 }`}
                 animate={{ scale: i === translatedCount ? [1, 1.3, 1] : 1 }}
-                transition={{ duration: 0.5, repeat: i === translatedCount ? Number.POSITIVE_INFINITY : 0 }}
+                transition={{ duration: 0.5, repeat: i === translatedCount ? Infinity : 0 }}
               />
             ))}
           </div>
