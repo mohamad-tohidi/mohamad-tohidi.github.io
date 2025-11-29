@@ -22,16 +22,28 @@ export function TranslationSection({ index }: TranslationSectionProps) {
   const scrollAccumulator = useRef(0)
   const lastScrollTime = useRef(0)
   const touchLastY = useRef<number | null>(null)
-  const scrollThreshold = 80
-  const debounceTime = 300
+  const touchStartY = useRef<number | null>(null)
+  
+  const getScrollThreshold = () => {
+    if (typeof window === "undefined") return 80
+    return window.innerWidth < 768 ? 30 : 80
+  }
+  
+  const getDebounceTime = () => {
+    if (typeof window === "undefined") return 300
+    return window.innerWidth < 768 ? 150 : 300
+  }
 
   const isComplete = translatedCount >= words.length
   const isAtStart = translatedCount <= 0
 
   useEffect(() => {
+    const isMobileDevice = window.innerWidth < 768
+    const threshold = isMobileDevice ? 0.3 : 0.8
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const inView = entry.isIntersecting && entry.intersectionRatio > 0.8
+        const inView = entry.isIntersecting && entry.intersectionRatio > threshold
         setIsInView(inView)
 
         if (inView) {
@@ -44,7 +56,7 @@ export function TranslationSection({ index }: TranslationSectionProps) {
           setIsLocked(false)
         }
       },
-      { threshold: [0.8, 1] },
+      { threshold: [threshold, 1] },
     )
 
     if (sectionRef.current) {
@@ -61,6 +73,8 @@ export function TranslationSection({ index }: TranslationSectionProps) {
       const now = Date.now()
       const isScrollingDown = e.deltaY > 0
       const isScrollingUp = e.deltaY < 0
+      const threshold = getScrollThreshold()
+      const debounce = getDebounceTime()
 
       // Allow natural scrolling when animation is at boundaries
       if (isComplete && isScrollingDown) {
@@ -78,14 +92,14 @@ export function TranslationSection({ index }: TranslationSectionProps) {
       setIsLocked(true)
 
       // Debounce rapid scroll events
-      if (now - lastScrollTime.current < debounceTime) {
+      if (now - lastScrollTime.current < debounce) {
         return
       }
 
-      const delta = Math.min(Math.abs(e.deltaY), scrollThreshold)
+      const delta = Math.min(Math.abs(e.deltaY), threshold)
       scrollAccumulator.current += delta
 
-      if (scrollAccumulator.current >= scrollThreshold) {
+      if (scrollAccumulator.current >= threshold) {
         lastScrollTime.current = now
         scrollAccumulator.current = 0
 
@@ -101,21 +115,23 @@ export function TranslationSection({ index }: TranslationSectionProps) {
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (!isInView || e.touches.length !== 1) return
+    touchStartY.current = e.touches[0].clientY
     touchLastY.current = e.touches[0].clientY
     scrollAccumulator.current = 0
     lastScrollTime.current = Date.now()
   }, [isInView])
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isInView || e.touches.length !== 1 || touchLastY.current === null) return
+    if (!isInView || e.touches.length !== 1 || touchLastY.current === null || touchStartY.current === null) return
 
     const now = Date.now()
     const currentY = e.touches[0].clientY
-    const delta = touchLastY.current - currentY
+    const totalDelta = touchStartY.current - currentY
+    const incrementalDelta = touchLastY.current - currentY
     touchLastY.current = currentY
 
-    const isScrollingDown = delta > 0
-    const isScrollingUp = delta < 0
+    const isScrollingDown = totalDelta > 0
+    const isScrollingUp = totalDelta < 0
 
     // Allow natural scrolling when animation is at boundaries
     if (isComplete && isScrollingDown) {
@@ -132,27 +148,29 @@ export function TranslationSection({ index }: TranslationSectionProps) {
     e.stopPropagation()
     setIsLocked(true)
 
-    // Debounce rapid events
-    if (now - lastScrollTime.current < debounceTime) {
-      return
-    }
-
-    const absDelta = Math.min(Math.abs(delta), scrollThreshold)
-    scrollAccumulator.current += absDelta
-
-    if (scrollAccumulator.current >= scrollThreshold) {
-      lastScrollTime.current = now
-      scrollAccumulator.current = 0
-
-      if (isScrollingDown) {
-        setTranslatedCount((prev) => Math.min(prev + 1, words.length))
-      } else {
-        setTranslatedCount((prev) => Math.max(prev - 1, 0))
+    // Use total swipe distance for mobile (more responsive)
+    const absTotalDelta = Math.abs(totalDelta)
+    const threshold = getScrollThreshold()
+    const debounce = getDebounceTime()
+    
+    // Check if we've swiped enough to trigger animation
+    if (absTotalDelta >= threshold) {
+      // Debounce to prevent rapid firing
+      if (now - lastScrollTime.current >= debounce) {
+        lastScrollTime.current = now
+        touchStartY.current = currentY // Reset start point after animation
+        
+        if (isScrollingDown) {
+          setTranslatedCount((prev) => Math.min(prev + 1, words.length))
+        } else {
+          setTranslatedCount((prev) => Math.max(prev - 1, 0))
+        }
       }
     }
   }, [isInView, isComplete, isAtStart])
 
   const handleTouchEnd = useCallback(() => {
+    touchStartY.current = null
     touchLastY.current = null
     scrollAccumulator.current = 0
   }, [])
@@ -327,7 +345,7 @@ export function TranslationSection({ index }: TranslationSectionProps) {
           </div>
 
           <span className="text-sm font-medium text-muted-foreground/50">
-            {isComplete ? "ادامه دهید" : "اسکرول کنید"}
+            {isComplete ? "ادامه دهید" : "اسکرول یا اسویپ کنید"}
           </span>
         </motion.div>
       </div>

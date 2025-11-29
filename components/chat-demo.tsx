@@ -4,19 +4,14 @@ import { useState, useRef, useEffect, type FormEvent } from "react"
 import { motion, useInView } from "framer-motion"
 import { Send, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 interface Message {
   id: number
   role: "user" | "assistant"
   content: string
 }
-
-const demoResponses = [
-  "سلام! من دستیار هوشمند شما هستم. می‌توانم به سوالات شما درباره محصولات، خدمات یا هر چیز دیگری کمک کنم.",
-  "سوال خوبی بود! من طراحی شده‌ام تا متن و زمینه را درک کنم و پاسخ‌های شخصی‌سازی شده ارائه دهم.",
-  "من ۲۴ ساعته در دسترس هستم و بیش از ۱۰۰ زبان را می‌فهمم. همیشه اینجا هستم تا کمک کنم.",
-  "من به طور یکپارچه با هویت برند شما ادغام می‌شوم و لحن و سبک شما را منطبق می‌کنم.",
-]
 
 function AnimatedPlaceholder() {
   const [text, setText] = useState("")
@@ -58,7 +53,6 @@ export function ChatDemo() {
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
-  const responseIndex = useRef(0)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -71,19 +65,95 @@ export function ChatDemo() {
     }
 
     setMessages((prev) => [...prev, userMessage])
+    const userInput = input.trim()
     setInput("")
     setIsTyping(true)
 
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: demoResponses[responseIndex.current % demoResponses.length],
+    // Create assistant message placeholder
+    const assistantMessageId = Date.now() + 1
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      role: "assistant",
+      content: "",
+    }
+    setMessages((prev) => [...prev, assistantMessage])
+
+    try {
+      const response = await fetch(
+        "https://parsa.api.t.etratnet.ir/user/chat/anonymous?deeper_search=false&project_name=porsyab",
+        {
+          method: "PATCH",
+          headers: {
+            accept: "*/*",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: "user",
+                content: userInput,
+              },
+            ],
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-      responseIndex.current++
-      setMessages((prev) => [...prev, assistantMessage])
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let accumulatedContent = ""
+
+      if (!reader) {
+        throw new Error("No response body")
+      }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split("\n")
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              if (data.chunk) {
+                accumulatedContent += data.chunk
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === assistantMessageId
+                      ? { ...msg, content: accumulatedContent }
+                      : msg
+                  )
+                )
+              }
+              if (data.done) {
+                setIsTyping(false)
+                return
+              }
+            } catch (error) {
+              console.error("Error parsing SSE data:", error)
+            }
+          }
+        }
+      }
+
       setIsTyping(false)
-    }, 1000)
+    } catch (error) {
+      console.error("Error fetching chat response:", error)
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? { ...msg, content: "خطا در دریافت پاسخ. لطفا دوباره تلاش کنید." }
+            : msg
+        )
+      )
+      setIsTyping(false)
+    }
   }
 
   return (
@@ -136,7 +206,15 @@ export function ChatDemo() {
                       : "bg-secondary text-secondary-foreground"
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  {message.role === "assistant" ? (
+                    <div className="text-sm leading-relaxed [&>p]:my-1 [&>p:first-child]:mt-0 [&>p:last-child]:mb-0 [&>h1]:text-base [&>h1]:font-semibold [&>h1]:my-2 [&>h2]:text-sm [&>h2]:font-semibold [&>h2]:my-2 [&>h3]:text-sm [&>h3]:font-medium [&>h3]:my-2 [&>ul]:my-1 [&>ul]:list-disc [&>ul]:list-inside [&>ul]:space-y-0.5 [&>ol]:my-1 [&>ol]:list-decimal [&>ol]:list-inside [&>ol]:space-y-0.5 [&>li]:my-0 [&>code]:text-xs [&>code]:bg-muted/50 [&>code]:px-1 [&>code]:py-0.5 [&>code]:rounded [&>pre]:my-2 [&>pre]:p-2 [&>pre]:bg-muted/30 [&>pre]:rounded [&>pre]:overflow-x-auto [&>pre>code]:bg-transparent [&>pre>code]:p-0 [&>blockquote]:border-r-2 [&>blockquote]:border-muted [&>blockquote]:pr-2 [&>blockquote]:my-2 [&>a]:text-accent [&>a]:underline [&>strong]:font-semibold">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                  )}
                 </div>
               </motion.div>
             ))}
